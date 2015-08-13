@@ -3,4 +3,6 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="ip_address">Your IP address goes here</string>
+    <string name="server_stopped">The server is not running.</string>
 </resources>
