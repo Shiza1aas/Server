@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     TextView ip_address;
     TextView client_message;
     TextView server_status;
+    TextView show_client_message;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
         ip_address = (TextView) findViewById(R.id.ip_address);
         client_message = (TextView) findViewById(R.id.get_client_message);
         server_status = (TextView) findViewById(R.id.server_status);
+        show_client_message = (TextView) findViewById(R.id.show_client_message);
 
 
         WifiManager wm = (WifiManager) getSystemService(WIFI_SERVICE);
@@ -42,25 +44,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startServer(View view) {
-        GetFromClient getFromClient = new GetFromClient(this,server_status);
+        GetFromClient getFromClient = new GetFromClient(this,server_status,show_client_message);
         getFromClient.execute();
     }
 
 }
 
-class GetFromClient extends AsyncTask<Void, String, String> {
+class GetFromClient extends AsyncTask<Void, String, Void> {
     Context context;
     TextView server_status;
+    TextView show_client_message;
     String TAG = "SERVER_MESSAGE";
     String inputFromClient = null;
 
-    public GetFromClient(Context context,TextView server_status) {
+    public GetFromClient(Context context,TextView server_status,TextView show_client_message) {
         this.context = context;
         this.server_status = server_status;
+        this.show_client_message = show_client_message;
     }
 
     @Override
-    protected String doInBackground(Void... params) {
+    protected Void doInBackground(Void... params) {
         Socket socket;
         try {
             ServerSocket serverSocket = new ServerSocket(8080);
@@ -78,10 +82,15 @@ class GetFromClient extends AsyncTask<Void, String, String> {
 //            Log.d(TAG, "Server Socket is started....");
             do
             {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
                 inputFromClient = input.readUTF();
                 publishProgress(inputFromClient);
             }
-            while ( inputFromClient != null );
+            while ( inputFromClient != "bye" );
 
 //            publishProgress(2);
             socket.close();
@@ -92,7 +101,7 @@ class GetFromClient extends AsyncTask<Void, String, String> {
 
         }
 
-        return inputFromClient;
+        return null;
     }
 
     @Override
@@ -104,21 +113,20 @@ class GetFromClient extends AsyncTask<Void, String, String> {
             server_status.setText("Server has been started");
             server_status.setTextColor(context.getResources().getColor(R.color.green));
         }
-        else if ( values[0].equals("bye") )
-        {
-            server_status.setText("Server is not running");
-            server_status.setTextColor(context.getResources().getColor(R.color.red));
-        }
         else
         {
-            server_status.setText(values[0]);
+            show_client_message.setText(values[0]);
         }
+
+
     }
 
-    protected void onPostExecute(String inputFromClient)
+    protected void onPostExecute(Void inputFromClient)
     {
         Log.d(TAG, "I am in onPostExecute.");
-        Toast.makeText(context,"The message from client is: " + inputFromClient,Toast.LENGTH_LONG).show();
+
+        server_status.setText("Server is not running");
+        server_status.setTextColor(context.getResources().getColor(R.color.red));
     }
 }
 
